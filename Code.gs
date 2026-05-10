@@ -139,11 +139,13 @@ function rebuildSummary() {
   const byDate = new Map();
 
   values.forEach((row) => {
-    const dateText = String(row[0] || '').trim();
     const action = String(row[2] || '').trim();
-    const timestamp = row[3] instanceof Date ? row[3] : new Date(row[3]);
+    const timestamp = normalizeTimestamp_(row[3]);
+    const dateText = timestamp
+      ? Utilities.formatDate(timestamp, CONFIG.timezone, 'yyyy-MM-dd')
+      : normalizeDateText_(row[0]);
 
-    if (!dateText || !CONFIG.allowedActions.includes(action) || Number.isNaN(timestamp.getTime())) {
+    if (!dateText || !CONFIG.allowedActions.includes(action) || !timestamp) {
       return;
     }
 
@@ -290,7 +292,7 @@ function getSummaryData_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const summary = ss.getSheetByName(CONFIG.summarySheetName);
   const rows = sheetToObjects_(summary).map((row) => ({
-    date: row['日期'],
+    date: normalizeDateText_(row['日期']),
     workStart: serialTimeToText_(row['上班']),
     lunchStart: serialTimeToText_(row['午休开始']),
     lunchEnd: serialTimeToText_(row['午休结束']),
@@ -318,10 +320,10 @@ function getRecordsData_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const records = ss.getSheetByName(CONFIG.recordsSheetName);
   const rows = sheetToObjects_(records).map((row) => ({
-    date: row['日期'],
-    time: row['时间'],
+    date: normalizeRecordDate_(row),
+    time: normalizeRecordTime_(row),
     action: row['类型'],
-    timestamp: row['时间戳'] instanceof Date ? row['时间戳'].toISOString() : row['时间戳'],
+    timestamp: normalizeTimestamp_(row['时间戳']) ? normalizeTimestamp_(row['时间戳']).toISOString() : '',
     note: row['备注'] || '',
     source: row['来源'] || '',
   }));
@@ -350,6 +352,15 @@ function sheetToObjects_(sheet) {
 }
 
 function serialTimeToText_(value) {
+  if (value instanceof Date) {
+    return Utilities.formatDate(value, CONFIG.timezone, 'HH:mm');
+  }
+
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{1,2}):(\d{2})/);
+    return match ? `${pad2_(Number(match[1]))}:${match[2]}` : '';
+  }
+
   if (typeof value !== 'number') return '';
   const seconds = Math.round(value * 86400) % 86400;
   const hours = Math.floor(seconds / 3600);
@@ -371,6 +382,50 @@ function serialDurationToHours_(value) {
 
 function pad2_(value) {
   return String(value).padStart(2, '0');
+}
+
+function normalizeTimestamp_(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizeDateText_(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CONFIG.timezone, 'yyyy-MM-dd');
+  }
+
+  const text = String(value || '').trim();
+  if (!text) return '';
+
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime())
+    ? text
+    : Utilities.formatDate(parsed, CONFIG.timezone, 'yyyy-MM-dd');
+}
+
+function normalizeRecordDate_(row) {
+  const timestamp = normalizeTimestamp_(row['时间戳']);
+  return timestamp
+    ? Utilities.formatDate(timestamp, CONFIG.timezone, 'yyyy-MM-dd')
+    : normalizeDateText_(row['日期']);
+}
+
+function normalizeRecordTime_(row) {
+  const timestamp = normalizeTimestamp_(row['时间戳']);
+  if (timestamp) {
+    return Utilities.formatDate(timestamp, CONFIG.timezone, 'HH:mm:ss');
+  }
+
+  return serialTimeToText_(row['时间']);
 }
 
 function getOrCreateSheet_(ss, name) {
