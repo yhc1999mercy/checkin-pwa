@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#176b55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="打卡">
+    <title>打卡</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel">今天</p>
+          <h1>打卡</h1>
+        </div>
+        <button class="icon-button" id="refreshButton" type="button" aria-label="刷新数据" title="刷新数据">
+          <span aria-hidden="true">↻</span>
+        </button>
+      </header>
+
+      <main>
+        <section class="notice" id="setupNotice">
+          <strong>先配置 Apps Script URL</strong>
+          <span>填入你部署后的 Web App URL，之后会保存在当前设备。</span>
+        </section>
+
+        <section class="panel settings-panel">
+          <label for="apiUrl">Apps Script Web App URL</label>
+          <div class="url-row">
+            <input id="apiUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://script.google.com/macros/s/.../exec">
+            <button id="saveUrlButton" type="button">保存</button>
+          </div>
+        </section>
+
+        <nav class="tabs" aria-label="页面">
+          <button class="tab is-active" type="button" data-view="checkin">打卡</button>
+          <button class="tab" type="button" data-view="today">今日</button>
+          <button class="tab" type="button" data-view="summary">汇总</button>
+          <button class="tab" type="button" data-view="charts">图表</button>
+        </nav>
+
+        <section class="view is-active" id="view-checkin">
+          <div class="button-grid" id="checkinButtons"></div>
+          <label class="note-field" for="noteInput">
+            <span>备注</span>
+            <input id="noteInput" type="text" placeholder="可选">
+          </label>
+          <div class="status-line" id="statusLine" role="status">准备就绪</div>
+        </section>
+
+        <section class="view" id="view-today">
+          <div class="today-summary" id="todaySummary"></div>
+          <div class="list" id="todayList"></div>
+        </section>
+
+        <section class="view" id="view-summary">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>上班</th>
+                  <th>下班</th>
+                  <th>午休</th>
+                  <th>晚饭</th>
+                  <th>工作</th>
+                  <th>异常</th>
+                </tr>
+              </thead>
+              <tbody id="summaryBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="view-charts">
+          <div class="chart-block">
+            <div class="chart-title">每日工作时长</div>
+            <canvas id="workDurationChart" width="720" height="360"></canvas>
+          </div>
+          <div class="chart-block">
+            <div class="chart-title">上下班时间变化</div>
+            <canvas id="checkTimeChart" width="720" height="360"></canvas>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
