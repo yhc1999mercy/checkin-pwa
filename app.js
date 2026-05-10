@@ -174,7 +174,7 @@ function renderToday() {
 function renderSummary() {
   el.summaryBody.innerHTML = '';
   if (!state.summary.length) {
-    el.summaryBody.innerHTML = '<tr><td colspan="7">暂无汇总数据</td></tr>';
+    el.summaryBody.innerHTML = '<tr><td colspan="9">暂无汇总数据</td></tr>';
     return;
   }
 
@@ -184,7 +184,9 @@ function renderSummary() {
       <td>${row.date || ''}</td>
       <td>${row.workStart || '-'}</td>
       <td>${row.workEnd || '-'}</td>
+      <td>${timeRange(row.lunchStart, row.lunchEnd)}</td>
       <td>${row.lunchDuration || '-'}</td>
+      <td>${timeRange(row.dinnerStart, row.dinnerEnd)}</td>
       <td>${row.dinnerDuration || '-'}</td>
       <td>${row.workDuration || '-'}</td>
       <td>${row.warning || ''}</td>
@@ -364,6 +366,11 @@ function timeToHour(text) {
   const [hour, minute] = text.split(':').map(Number);
   if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
   return hour + minute / 60;
+}
+
+function timeRange(start, end) {
+  if (!start && !end) return '-';
+  return `${start || '?'} - ${end || '?'}`;
 }
 
 function hourToTime(value) {
