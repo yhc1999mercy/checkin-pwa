@@ -134,3 +134,10 @@ iPhone 使用：
 ```text
 https://yhc1999mercy.github.io/checkin-pwa/
 ```
+
+## 贡献者
+
+| 贡献者 | 内容 |
+|---|---|
+| yhc1999mercy | 需求、配置和使用反馈 |
+| Codex | PWA、Apps Script 接口和部署协助 |
