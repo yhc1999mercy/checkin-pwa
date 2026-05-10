@@ -369,15 +369,17 @@ function serialTimeToText_(value) {
 }
 
 function serialDurationToText_(value) {
-  if (typeof value !== 'number') return '';
-  const totalMinutes = Math.round(value * 1440);
+  const totalMinutes = durationToMinutes_(value);
+  if (totalMinutes === null) return '';
+
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours}:${pad2_(minutes)}`;
 }
 
 function serialDurationToHours_(value) {
-  return typeof value === 'number' ? Math.round(value * 24 * 100) / 100 : null;
+  const totalMinutes = durationToMinutes_(value);
+  return totalMinutes === null ? null : Math.round((totalMinutes / 60) * 100) / 100;
 }
 
 function pad2_(value) {
@@ -426,6 +428,26 @@ function normalizeRecordTime_(row) {
   }
 
   return serialTimeToText_(row['时间']);
+}
+
+function durationToMinutes_(value) {
+  if (typeof value === 'number') {
+    return Math.round(value * 1440);
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const hours = Number(Utilities.formatDate(value, CONFIG.timezone, 'H'));
+    const minutes = Number(Utilities.formatDate(value, CONFIG.timezone, 'm'));
+    return hours * 60 + minutes;
+  }
+
+  const text = String(value || '').trim();
+  if (!text) return null;
+
+  const match = text.match(/^(\d+):(\d{1,2})(?::\d{1,2})?$/);
+  if (!match) return null;
+
+  return Number(match[1]) * 60 + Number(match[2]);
 }
 
 function getOrCreateSheet_(ss, name) {
