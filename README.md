@@ -128,3 +128,9 @@ iPhone 使用：
 4. 选择 `添加到主屏幕`。
 
 注意：PWA 真正安装到 iPhone 主屏幕时，需要 HTTPS。`localhost` 只适合在电脑上测试。
+
+当前 GitHub Pages 地址：
+
+```text
+https://yhc1999mercy.github.io/checkin-pwa/
+```
