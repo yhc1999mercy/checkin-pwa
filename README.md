@@ -93,7 +93,8 @@ Google Sheets 会自动维护 3 个工作表：
 | `styles.css` | 页面样式 |
 | `manifest.webmanifest` | PWA 安装信息 |
 | `sw.js` | 离线缓存 |
-| `icon.svg` | 应用图标 |
+| `apple-touch-icon.png` | iPhone 主屏幕图标 |
+| `icon-192.png` / `icon-512.png` | PWA 应用图标 |
 
 PWA 会复用同一个 Apps Script Web App URL。因为浏览器访问 Apps Script 会遇到跨域限制，`Code.gs` 已经增加了 PWA 专用的 JSONP 接口。
 
