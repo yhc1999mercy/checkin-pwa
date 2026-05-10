@@ -16,6 +16,7 @@ const state = {
 const el = {
   apiUrl: document.querySelector('#apiUrl'),
   saveUrlButton: document.querySelector('#saveUrlButton'),
+  toggleUrlButton: document.querySelector('#toggleUrlButton'),
   setupNotice: document.querySelector('#setupNotice'),
   checkinButtons: document.querySelector('#checkinButtons'),
   noteInput: document.querySelector('#noteInput'),
@@ -54,6 +55,14 @@ function bindEvents() {
     setStatus('已保存 URL');
     updateSetupNotice();
     loadData();
+  });
+
+  el.toggleUrlButton.addEventListener('click', () => {
+    const isHidden = el.apiUrl.type === 'password';
+    el.apiUrl.type = isHidden ? 'url' : 'password';
+    el.toggleUrlButton.setAttribute('aria-label', isHidden ? '隐藏链接' : '显示链接');
+    el.toggleUrlButton.setAttribute('title', isHidden ? '隐藏链接' : '显示链接');
+    el.toggleUrlButton.classList.toggle('is-visible', isHidden);
   });
 
   el.refreshButton.addEventListener('click', loadData);

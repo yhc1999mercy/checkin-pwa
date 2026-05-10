@@ -34,7 +34,12 @@
         <section class="panel settings-panel">
           <label for="apiUrl">Apps Script Web App URL</label>
           <div class="url-row">
-            <input id="apiUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://script.google.com/macros/s/.../exec">
+            <div class="secret-input">
+              <input id="apiUrl" type="password" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec">
+              <button class="secret-toggle" id="toggleUrlButton" type="button" aria-label="显示链接" title="显示链接">
+                <span aria-hidden="true">◎</span>
+              </button>
+            </div>
             <button id="saveUrlButton" type="button">保存</button>
           </div>
         </section>
