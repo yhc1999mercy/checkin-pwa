@@ -206,7 +206,7 @@ function renderSummary() {
 
 function renderCharts() {
   const rows = state.summary.slice(-21);
-  drawLineChart(el.workDurationChart, {
+  drawBarChart(el.workDurationChart, {
     rows: rows.filter((row) => typeof row.workDurationHours === 'number'),
     getX: (row) => row.date.slice(5),
     series: [
@@ -219,7 +219,7 @@ function renderCharts() {
     ],
   });
 
-  drawLineChart(el.checkTimeChart, {
+  drawBarChart(el.checkTimeChart, {
     rows: rows.filter((row) => row.workStart || row.workEnd),
     getX: (row) => row.date.slice(5),
     series: [
@@ -239,7 +239,7 @@ function renderCharts() {
   });
 }
 
-function drawLineChart(canvas, config) {
+function drawBarChart(canvas, config) {
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
@@ -265,12 +265,15 @@ function drawLineChart(canvas, config) {
     return;
   }
 
-  const minY = Math.floor(Math.min(...points.map((p) => p.y)));
+  const rawMinY = Math.min(...points.map((p) => p.y));
+  const minY = rawMinY > 0 && rawMinY < 6 ? 0 : Math.floor(rawMinY);
   const maxY = Math.ceil(Math.max(...points.map((p) => p.y)));
   const ySpan = Math.max(1, maxY - minY);
   const plotWidth = width - pad.left - pad.right;
   const plotHeight = height - pad.top - pad.bottom;
-  const xDenom = Math.max(1, config.rows.length - 1);
+  const groupWidth = plotWidth / Math.max(1, config.rows.length);
+  const barGap = Math.max(3, groupWidth * 0.12);
+  const barWidth = Math.max(4, (groupWidth - barGap * 2) / config.series.length);
 
   ctx.strokeStyle = '#dce4de';
   ctx.lineWidth = 1;
@@ -290,30 +293,21 @@ function drawLineChart(canvas, config) {
 
   config.rows.forEach((row, index) => {
     if (index % Math.ceil(config.rows.length / 6) !== 0 && index !== config.rows.length - 1) return;
-    const x = pad.left + (plotWidth * index) / xDenom;
+    const x = pad.left + groupWidth * index + groupWidth / 2;
     ctx.fillText(config.getX(row), x - 18, height - 18);
   });
 
-  config.series.forEach((serie) => {
-    ctx.strokeStyle = serie.color;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    let started = false;
-
-    config.rows.forEach((row, index) => {
+  config.rows.forEach((row, index) => {
+    config.series.forEach((serie, serieIndex) => {
       const value = serie.getY(row);
       if (typeof value !== 'number' || !Number.isFinite(value)) return;
 
-      const x = pad.left + (plotWidth * index) / xDenom;
+      const x = pad.left + groupWidth * index + barGap + barWidth * serieIndex;
       const y = pad.top + plotHeight - ((value - minY) / ySpan) * plotHeight;
-      if (!started) {
-        ctx.moveTo(x, y);
-        started = true;
-      } else {
-        ctx.lineTo(x, y);
-      }
+      const baseline = pad.top + plotHeight;
+      ctx.fillStyle = serie.color;
+      ctx.fillRect(x, y, barWidth, Math.max(2, baseline - y));
     });
-    ctx.stroke();
   });
 }
 
