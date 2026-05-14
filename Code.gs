@@ -196,22 +196,24 @@ function rebuildSummary() {
 
 function buildSummaryRow_(day) {
   const workStart = first_(day.actions['上班']);
-  const lunchStart = first_(day.actions['午休开始']);
-  const lunchEnd = last_(day.actions['午休结束']);
-  const dinnerStart = first_(day.actions['晚饭开始']);
-  const dinnerEnd = last_(day.actions['晚饭结束']);
+  const lunchBreaks = pairedBreaks_(day.actions['午休开始'], day.actions['午休结束']);
+  const dinnerBreaks = pairedBreaks_(day.actions['晚饭开始'], day.actions['晚饭结束']);
+  const lunchStart = first_(lunchBreaks.starts);
+  const lunchEnd = last_(lunchBreaks.ends);
+  const dinnerStart = first_(dinnerBreaks.starts);
+  const dinnerEnd = last_(dinnerBreaks.ends);
   const workEnd = last_(day.actions['下班']);
 
-  const lunchDuration = durationDays_(lunchStart, lunchEnd);
-  const dinnerDuration = durationDays_(dinnerStart, dinnerEnd);
+  const lunchDuration = lunchBreaks.duration;
+  const dinnerDuration = dinnerBreaks.duration;
   const totalSpan = durationDays_(workStart, workEnd);
   const workDuration = totalSpan === '' ? '' : Math.max(0, totalSpan - valueOrZero_(lunchDuration) - valueOrZero_(dinnerDuration));
   const warnings = [];
 
   if (!workStart) warnings.push('缺上班');
   if (!workEnd) warnings.push('缺下班');
-  if ((lunchStart && !lunchEnd) || (!lunchStart && lunchEnd)) warnings.push('午休不完整');
-  if ((dinnerStart && !dinnerEnd) || (!dinnerStart && dinnerEnd)) warnings.push('晚饭不完整');
+  if (lunchBreaks.unmatchedStarts || lunchBreaks.unmatchedEnds) warnings.push('午休不完整');
+  if (dinnerBreaks.unmatchedStarts || dinnerBreaks.unmatchedEnds) warnings.push('晚饭不完整');
 
   return [
     day.date,
@@ -227,6 +229,41 @@ function buildSummaryRow_(day) {
     day.count,
     warnings.join('、'),
   ];
+}
+
+function pairedBreaks_(starts, ends) {
+  const sortedStarts = sortedDates_(starts);
+  const sortedEnds = sortedDates_(ends);
+  const pairedStarts = [];
+  const pairedEnds = [];
+  let endIndex = 0;
+  let unmatchedStarts = 0;
+  let duration = 0;
+
+  sortedStarts.forEach((start) => {
+    while (endIndex < sortedEnds.length && sortedEnds[endIndex] <= start) {
+      endIndex += 1;
+    }
+
+    if (endIndex >= sortedEnds.length) {
+      unmatchedStarts += 1;
+      return;
+    }
+
+    const end = sortedEnds[endIndex];
+    pairedStarts.push(start);
+    pairedEnds.push(end);
+    duration += durationDays_(start, end);
+    endIndex += 1;
+  });
+
+  return {
+    starts: pairedStarts,
+    ends: pairedEnds,
+    duration: pairedStarts.length ? duration : '',
+    unmatchedStarts,
+    unmatchedEnds: Math.max(0, sortedEnds.length - endIndex),
+  };
 }
 
 function refreshCharts_(ss, summary, charts) {
@@ -460,6 +497,10 @@ function first_(items) {
 
 function last_(items) {
   return items && items.length ? items.slice().sort((a, b) => a - b)[items.length - 1] : null;
+}
+
+function sortedDates_(items) {
+  return items && items.length ? items.slice().sort((a, b) => a - b) : [];
 }
 
 function timeOfDay_(date) {
